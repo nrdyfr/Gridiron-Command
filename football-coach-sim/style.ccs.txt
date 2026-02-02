@@ -1,0 +1,18 @@
+/* Custom Scrollbar for the Roster */
+.roster-container::-webkit-scrollbar { width: 4px; }
+.roster-container::-webkit-scrollbar-thumb { background: var(--accent); }
+
+/* Sticky Table Header */
+.roster-table th {
+    position: sticky;
+    top: 0;
+    background: #0a0f16;
+    border-bottom: 2px solid var(--accent);
+    z-index: 10;
+}
+
+/* Star Player Highlight */
+.star-player {
+    background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 100%);
+    border-left: 2px solid var(--accent);
+}

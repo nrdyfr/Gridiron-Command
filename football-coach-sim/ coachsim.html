@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GRIDIRON COMMAND | PRO-SIM</title>
+    <style>
+        :root {
+            --accent: #00f0ff;
+            --accent-dim: rgba(0, 240, 255, 0.2);
+            --bg: #05070a;
+            --panel: rgba(10, 15, 25, 0.98);
+            --border: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            /* High-visibility white text highlight (Black outline + White glow) */
+            --text-halo: 0 0 4px #000, 0 0 8px #000, 0 0 2px rgba(255,255,255,0.3);
+        }
+
+        body {
+            margin: 0; background: var(--bg); color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            text-shadow: var(--text-halo);
+        }
+
+        .view { display: block; width: 90%; max-width: 1100px; animation: fadeIn 0.4s ease; margin: 0 auto; }
+        .hidden { display: none !important; }
+
+        .background-overlay {
+            position: fixed; top:0; left:0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #111827 0%, #000 100%);
+            z-index: -2;
+        }
+
+        .scanlines {
+            position: fixed; top:0; left:0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px; z-index: 999; pointer-events: none; opacity: 0.15;
+        }
+
+        .ui-container { min-height: 100vh; display: flex; justify-content: center; align-items: center; position: relative; z-index: 10; }
+
+        .logo { 
+            font-size: 5.5rem; font-weight: 900; line-height: 0.8; margin: 0; 
+            text-transform: uppercase; color: #ffffff; letter-spacing: -2px;
+        }
+        
+        .accent { 
+            color: var(--accent); 
+            text-shadow: 0 0 15px var(--accent), var(--text-halo); 
+        }
+
+        .nav-btn, .action-btn {
+            background: rgba(255, 255, 255, 0.05); border: 2px solid var(--border); color: #ffffff;
+            padding: 18px 40px; cursor: pointer; transition: 0.3s;
+            font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
+        }
+
+        .nav-btn:hover, .action-btn:hover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+            box-shadow: 0 0 30px var(--accent-dim);
+            transform: scale(1.02);
+        }
+
+        .modern-grid { 
+            display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; 
+            padding: 25px; background: rgba(0,0,0,0.8); border: 1px solid var(--border);
+        }
+
+        .team-node {
+            width: 60px; height: 60px; background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; transition: 0.2s; font-weight: 900; color: #ffffff;
+        }
+
+        .team-node:hover { border-color: var(--accent); transform: scale(1.1); box-shadow: 0 0 15px var(--accent); }
+
+        header#global-header {
+            position: fixed; top: 0; width: 100%; height: 60px; 
+            background: rgba(0,0,0,0.95); border-bottom: 2px solid var(--accent);
+            display: flex; align-items: center; padding: 0 40px; justify-content: space-between; 
+            z-index: 1000; box-sizing: border-box; font-weight: 900;
+        }
+
+        .dash-content { 
+            margin-top: 80px; background: var(--panel); border: 1px solid var(--border); 
+            padding: 25px; height: 500px; overflow-y: auto;
+            box-shadow: inset 0 0 50px #000;
+        }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { 
+            background: rgba(0,0,0,0.8); text-align: left; color: var(--accent); 
+            padding: 15px; border-bottom: 3px solid var(--accent); font-size: 0.8rem;
+        }
+        td { 
+            padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); 
+            background: rgba(255,255,255,0.02); font-weight: 700;
+        }
+
+        .txt-bg {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            display: inline-block;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="background-overlay"></div>
+    <div class="scanlines"></div>
+
+    <header id="global-header" class="hidden">
+        <div><span class="txt-bg">COMMS: <span class="accent">SECURE</span></span></div>
+        <div><span class="txt-bg">FRANCHISE: <span id="header-team" class="accent">--</span></span></div>
+        <div id="header-date" class="txt-bg">02.01.2026</div>
+    </header>
+
+    <main class="ui-container">
+        <div id="main-menu" class="view">
+            <h1 class="logo">GRIDIRON<br><span class="accent">COMMAND</span></h1>
+            <nav style="margin-top: 40px;">
+                <button class="nav-btn" onclick="showView('team-select')">INITIALIZE OPERATIONS</button>
+            </nav>
+        </div>
+
+        <div id="team-select" class="view hidden">
+            <h2 class="txt-bg">SELECT <span class="accent">DATA NODE</span></h2>
+            <div style="display: flex; gap: 40px; margin-top: 20px;">
+                <div id="team-grid" class="modern-grid"></div>
+                <div style="flex: 1; background: var(--panel); border: 2px solid var(--border); padding: 30px;">
+                    <h2 id="sel-name" class="accent">READY</h2>
+                    <p id="sel-desc" style="line-height: 1.8; font-weight: 700;">Establish neural link with team database.</p>
+                    <button class="action-btn" style="width: 100%; margin-top: 30px;" onclick="confirmTeam()">START SIMULATION</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="dashboard" class="view hidden">
+            <div class="dash-content">
+                <h3 class="accent" style="margin-bottom: 20px; font-size: 1.5rem;">53-MAN PERSONNEL DATABASE</h3>
+                <table>
+                    <thead>
+                        <tr><th>POS</th><th>FULL NAME</th><th>OVR</th><th>STATUS</th></tr>
+                    </thead>
+                    <tbody id="roster-body"></tbody>
+                </table>
+            </div>
+            <button class="nav-btn" style="margin-top: 20px;" onclick="showView('main-menu')">EXIT SYSTEM</button>
+        </div>
+    </main>
+
+    <script>
+        const root = document.documentElement;
+        let selectedTeam = null;
+
+        // Generic Name Bank
+        const FIRST_NAMES = ["Marcus", "Darius", "Xavier", "Grant", "Caleb", "Julian", "Andre", "Silas", "Tanner", "Malik", "Colton", "Pierce", "Quentin", "Felix", "Garrett", "Jaxson", "Preston", "Devon", "Lance", "Brooks"];
+        const LAST_NAMES = ["Vance", "Sterling", "Kessler", "Rhodes", "Blackwood", "Rivers", "Thorne", "Vaughn", "Cross", "Mercer", "Nash", "Wilder", "Bishop", "Garrison", "Stone", "Hayes", "Drake", "Cade"];
+
+        const LEAGUE = [
+            { city: "ARIZONA", code: "ARI", color: "#97233f" }, { city: "ATLANTA", code: "ATL", color: "#a71930" },
+            { city: "BALTIMORE", code: "BAL", color: "#241773" }, { city: "BUFFALO", code: "BUF", color: "#00338d" },
+            { city: "CAROLINA", code: "CAR", color: "#0085ca" }, { city: "CHICAGO", code: "CHI", color: "#c83803" },
+            { city: "CINCINNATI", code: "CIN", color: "#fb4f14" }, { city: "CLEVELAND", code: "CLE", color: "#311d00" },
+            { city: "DALLAS", code: "DAL", color: "#003594" }, { city: "DENVER", code: "DEN", color: "#fb4f14" },
+            { city: "DETROIT", code: "DET", color: "#0076b6" }, { city: "GREEN BAY", code: "GB", color: "#203731" },
+            { city: "HOUSTON", code: "HOU", color: "#03202f" }, { city: "INDIANAPOLIS", code: "IND", color: "#002c5f" },
+            { city: "JACKSONVILLE", code: "JAX", color: "#006778" }, { city: "KANSAS CITY", code: "KC", color: "#e31837" },
+            { city: "LAS VEGAS", code: "LV", color: "#a6aeb0" }, { city: "LA CHARGERS", code: "LAC", color: "#0080c6" },
+            { city: "LA RAMS", code: "LAR", color: "#003594" }, { city: "MIAMI", code: "MIA", color: "#008e97" },
+            { city: "MINNESOTA", code: "MIN", color: "#4f2683" }, { city: "NEW ENGLAND", code: "NE", color: "#002244" },
+            { city: "NEW ORLEANS", code: "NO", color: "#d3bc8d" }, { city: "NY GIANTS", code: "NYG", color: "#0b2265" },
+            { city: "NY JETS", code: "NYJ", color: "#125740" }, { city: "PHILADELPHIA", code: "PHI", color: "#004c54" },
+            { city: "PITTSBURGH", code: "PIT", color: "#ffb612" }, { city: "SAN FRANCISCO", code: "SF", color: "#aa0000" },
+            { city: "SEATTLE", code: "SEA", color: "#002244" }, { city: "TAMPA BAY", code: "TB", color: "#d50a0a" },
+            { city: "TENNESSEE", code: "TEN", color: "#4b92db" }, { city: "WASHINGTON", code: "WAS", color: "#5a1414" }
+        ];
+
+        function showView(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            const header = document.getElementById('global-header');
+            id === 'dashboard' ? header.classList.remove('hidden') : header.classList.add('hidden');
+            if(id === 'team-select') renderTeams();
+        }
+
+        function renderTeams() {
+            const grid = document.getElementById('team-grid');
+            if(grid.children.length > 0) return;
+            LEAGUE.forEach(t => {
+                const btn = document.createElement('div');
+                btn.className = 'team-node';
+                btn.innerText = t.code;
+                btn.onclick = () => {
+                    selectedTeam = t;
+                    document.getElementById('sel-name').innerText = t.city;
+                    document.getElementById('sel-desc').innerHTML = `<span class="accent">DATA NODE LOCKED</span>`;
+                    root.style.setProperty('--accent', t.color);
+                    root.style.setProperty('--accent-dim', t.color + '44');
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        function confirmTeam() {
+            if(!selectedTeam) return alert("Select a node.");
+            document.getElementById('header-team').innerText = selectedTeam.city;
+            generateRoster();
+            showView('dashboard');
+        }
+
+        function generateRoster() {
+            const body = document.getElementById('roster-body');
+            body.innerHTML = "";
+            const positions = ["QB", "RB", "WR", "TE", "LT", "LG", "C", "RG", "RT", "DE", "DT", "LB", "CB", "S", "K"];
+            for(let i=0; i<53; i++) {
+                const f = FIRST_NAMES[Math.floor(Math.random()*FIRST_NAMES.length)];
+                const l = LAST_NAMES[Math.floor(Math.random()*LAST_NAMES.length)];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="accent">${positions[i % positions.length]}</td>
+                    <td>${f.toUpperCase()} ${l.toUpperCase()}</td>
+                    <td class="accent">${Math.floor(Math.random()*25) + 70}</td>
+                    <td style="color: #4ade80">ONLINE</td>
+                `;
+                body.appendChild(row);
+            }
+        }
+    </script>
+</body>
+</html>
